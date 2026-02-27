@@ -7,6 +7,7 @@ using System.Text;
 using FashionEcommerce.API.Data;
 using FashionEcommerce.API.Models;
 using FashionEcommerce.API.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FashionEcommerce.API.Controllers
 {
@@ -27,25 +28,22 @@ namespace FashionEcommerce.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto request)
         {
-            // Kiểm tra xem Username hoặc Email đã tồn tại chưa
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return BadRequest("Tên đăng nhập đã tồn tại!");
                 
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("Email đã được sử dụng!");
 
-            // Mã hóa mật khẩu bằng BCrypt
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            // Tạo tài khoản mới
             var newUser = new User
             {
                 Username = request.Username,
-                PasswordHash = passwordHash, // Lưu mật khẩu đã mã hóa
+                PasswordHash = passwordHash,
                 FullName = request.FullName,
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
-                Role = "Customer" // Mặc định ai đăng ký cũng là Khách hàng
+                Role = "Customer" 
             };
 
             _context.Users.Add(newUser);
@@ -58,19 +56,45 @@ namespace FashionEcommerce.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto request)
         {
-            // Tìm user trong database
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
             
-            // Nếu không thấy user hoặc mật khẩu giải mã không khớp
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return BadRequest("Sai tên đăng nhập hoặc mật khẩu!");
             }
 
-            // Nếu đúng, tạo ra Token JWT để cấp cho người dùng
             var token = CreateToken(user);
 
             return Ok(new { Token = token, Message = "Đăng nhập thành công!" });
+        }
+
+        // 3. API ĐĂNG KÝ ADMIN (POST: api/auth/register-admin)
+        [HttpPost("register-admin")]
+        [Authorize(Roles = "Admin")] // CHỈ NGƯỜI CÓ QUYỀN ADMIN MỚI ĐƯỢC TẠO ADMIN KHÁC
+        public async Task<IActionResult> RegisterAdmin(RegisterDto request)
+        {
+            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+                return BadRequest("Tên đăng nhập này đã tồn tại!");
+
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                return BadRequest("Email này đã được sử dụng!");
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            var adminUser = new User
+            {
+                Username = request.Username,
+                PasswordHash = passwordHash,
+                FullName = request.FullName,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Role = "Admin" 
+            };
+
+            _context.Users.Add(adminUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = $"Đã tạo thành công tài khoản Quản trị viên: {request.Username}" });
         }
 
         // HÀM HỖ TRỢ: Tạo Token JWT
@@ -80,7 +104,7 @@ namespace FashionEcommerce.API.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role ?? "Customer") // Đưa quyền (Role) vào token
+                new Claim(ClaimTypes.Role, user.Role ?? "Customer") 
             };
 
             var jwtSettings = _configuration.GetSection("Jwt");
@@ -91,7 +115,7 @@ namespace FashionEcommerce.API.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1), // Token có hạn 1 ngày
+                Expires = DateTime.Now.AddDays(1), 
                 SigningCredentials = creds,
                 Issuer = jwtSettings["Issuer"],
                 Audience = jwtSettings["Audience"]
