@@ -75,6 +75,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // Cho phép hiển thị ảnh từ thư mục wwwroot ra ngoài trình duyệt
 
 // Lưu ý quan trọng: Authentication (Xác thực) phải luôn nằm TRƯỚC Authorization (Cấp quyền)
 app.UseAuthentication(); 
