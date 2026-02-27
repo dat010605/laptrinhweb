@@ -15,7 +15,7 @@ public partial class ApplicationDbContext : DbContext
         : base(options)
     {
     }
-
+    public DbSet<UserAddress> UserAddresses { get; set; }
     public virtual DbSet<Address> Addresses { get; set; }
 
     public virtual DbSet<Article> Articles { get; set; }
