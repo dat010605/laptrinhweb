@@ -19,6 +19,7 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<Address> Addresses { get; set; }
 
     public virtual DbSet<Article> Articles { get; set; }
+    public virtual DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
     public virtual DbSet<Cart> Carts { get; set; }
 

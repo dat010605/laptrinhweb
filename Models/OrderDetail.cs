@@ -8,6 +8,7 @@ public partial class OrderDetail
     public int OrderDetailId { get; set; }
 
     public int? OrderId { get; set; }
+    public int? ProductId { get; set; }
 
     public int? VariantId { get; set; }
 
@@ -18,4 +19,9 @@ public partial class OrderDetail
     public virtual Order? Order { get; set; }
 
     public virtual ProductVariant? Variant { get; set; }
+    public string? ProductNameSnapshot { get; set; } 
+    
+        public decimal? PriceSnapshot { get; set; }
+        
+    
 }
