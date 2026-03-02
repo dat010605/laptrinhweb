@@ -38,7 +38,7 @@ namespace FashionEcommerce.API.Controllers
                 var order = new Order
                 {
                     UserId = dto.UserId,
-                    // Lưu ý: Nếu Order.cs của bạn không có OrderDate, Status... hãy mở Order.cs ra thêm vào
+                    
                     OrderDate = DateTime.Now,
                     OrderStatus = "Chờ xử lý",
                     ShippingAddress = dto.ShippingAddress
@@ -48,7 +48,7 @@ namespace FashionEcommerce.API.Controllers
 
                 foreach (var item in cartItems)
                 {
-                    // SỬA LỖI: Tìm biến thể (Variant) trước, sau đó lấy Product đi kèm
+                   
                     var variant = await _context.ProductVariants
                                                 .Include(v => v.Product)
                                                 .FirstOrDefaultAsync(v => v.VariantId == item.VariantId);
@@ -64,14 +64,13 @@ namespace FashionEcommerce.API.Controllers
                         OrderId = order.OrderId, // Lưu ý: Tên cột khóa chính của Order có thể là OrderId thay vì Id
                         ProductId = variant.Product.ProductId, // Lấy ID sản phẩm từ biến thể
                         ProductNameSnapshot = variant.Product.Name,
-                        PriceSnapshot = variant.Product.BasePrice, // SỬA LỖI: Dùng BasePrice theo file Product.cs
+                        PriceSnapshot = variant.Product.BasePrice, 
                         Quantity = item.Quantity
                     };
                     _context.OrderDetails.Add(orderDetail);
 
                     // 3. XỬ LÝ RACE CONDITION (Trừ kho ở bảng ProductVariants)
-                    // Lưu ý: Tôi đang giả định cột tồn kho trong bảng ProductVariants tên là 'Quantity'. 
-                    // Nếu nó tên là 'Stock', hãy đổi chữ Quantity thành Stock trong câu SQL dưới đây.
+                   
                     var rowsAffected = await _context.Database.ExecuteSqlInterpolatedAsync(
     $"UPDATE ProductVariants SET StockQuantity = StockQuantity - {item.Quantity} WHERE VariantId = {item.VariantId} AND StockQuantity >= {item.Quantity}");
                     

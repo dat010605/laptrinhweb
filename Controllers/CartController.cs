@@ -25,7 +25,7 @@ namespace laptrinhweb.Controllers
             if (variant == null) return NotFound("Không tìm thấy phân loại sản phẩm này.");
             
             // LƯU Ý: Nếu trong file ProductVariant.cs của bạn, biến tồn kho không tên là 'Stock' mà tên là 'Quantity'
-            // Hãy sửa chữ variant.Stock dưới đây thành variant.Quantity nhé!
+            // Hãy sửa chữ variant.Stock dưới đây thành variant.Quantity 
             if (variant.StockQuantity < cartDto.Quantity) 
             {
                 return BadRequest("Sản phẩm không đủ hàng trong kho.");
@@ -34,9 +34,9 @@ namespace laptrinhweb.Controllers
             // 2. Thêm vào giỏ với VariantId
             var cartItem = new Cart { 
                 UserId = cartDto.UserId, 
-                VariantId = cartDto.VariantId, // Đã sửa lỗi: Dùng VariantId thay vì ProductId
+                VariantId = cartDto.VariantId, 
                 Quantity = cartDto.Quantity,
-                CreatedDate = DateTime.Now     // Map thêm trường CreatedDate có trong file Cart.cs của bạn
+                CreatedDate = DateTime.Now     
             };
             
             _context.Carts.Add(cartItem);
