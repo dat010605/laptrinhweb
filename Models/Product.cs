@@ -26,4 +26,8 @@ public partial class Product
     public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
 
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public virtual ICollection<PromotionCondition> PromotionConditions { get; set; } = new List<PromotionCondition>();
+
+    // vouchers that apply to this product
+    public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 }

@@ -39,8 +39,9 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<Voucher> Vouchers { get; set; }
+    public virtual DbSet<PromotionCondition> PromotionConditions { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; }
 
- 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Address>(entity =>
@@ -197,6 +198,36 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("FK__ProductVa__Produ__37A5467C");
         });
 
+        // promotion conditions table defines when a voucher applies and its priority
+        modelBuilder.Entity<PromotionCondition>(entity =>
+        {
+            entity.HasKey(e => e.PromotionConditionId);
+            entity.Property(e => e.Priority).HasDefaultValue(0);
+
+            entity.HasOne(d => d.Voucher).WithMany()
+                .HasForeignKey(d => d.VoucherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Product).WithMany()
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // notifications stored per user
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationId);
+            entity.Property(e => e.Message).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Review>(entity =>
         {
             entity.HasKey(e => e.ReviewId).HasName("PK__Reviews__74BC79CE712ECD16");
@@ -253,6 +284,12 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.UsageLimit).HasDefaultValue(100);
+
+            // relationship to product (optional)
+            entity.HasOne(d => d.Product)
+                .WithMany(p => p.Vouchers)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK_Vouchers_Products");
         });
 
         OnModelCreatingPartial(modelBuilder);
