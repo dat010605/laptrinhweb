@@ -19,7 +19,7 @@ namespace FashionEcommerce.API.Controllers
             _context = context;
         }
 
-        // 1. GET: api/reviews/product/{productId} (Lấy danh sách đánh giá của 1 sản phẩm)
+      
         [HttpGet("product/{productId}")]
         public async Task<IActionResult> GetProductReviews(int productId)
         {
@@ -39,17 +39,14 @@ namespace FashionEcommerce.API.Controllers
             return Ok(reviews);
         }
 
-        // 2. POST: api/reviews (Khách hàng viết đánh giá mới)
+      
         [HttpPost]
-        [Authorize] // Bắt buộc đăng nhập
+        [Authorize]
         public async Task<IActionResult> CreateReview([FromBody] CreateReviewDto request)
         {
-            // Lấy ID khách hàng từ Token
+          
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // --- LOGIC RÀNG BUỘC QUAN TRỌNG NHẤT ---
-            // Kiểm tra xem khách hàng này đã có đơn hàng nào chứa ProductId này và đã "Completed" chưa?
-            // Lưu ý: OrderDetail chứa VariantId, Variant lại liên kết với ProductId
             var hasBoughtProduct = await _context.Orders
                 .Where(o => o.UserId == userId && o.OrderStatus == "Completed")
                 .AnyAsync(o => o.OrderDetails.Any(od => od.Variant != null && od.Variant.ProductId == request.ProductId));
@@ -59,7 +56,7 @@ namespace FashionEcommerce.API.Controllers
                 return BadRequest("Bạn chưa mua sản phẩm này hoặc đơn hàng chưa hoàn thành nên không thể đánh giá!");
             }
 
-            // (Tuỳ chọn thêm) Kiểm tra xem khách đã đánh giá sản phẩm này chưa để chống Spam
+           
             var alreadyReviewed = await _context.Reviews
                 .AnyAsync(r => r.UserId == userId && r.ProductId == request.ProductId);
 
@@ -68,7 +65,7 @@ namespace FashionEcommerce.API.Controllers
                 return BadRequest("Bạn đã đánh giá sản phẩm này rồi!");
             }
 
-            // Nếu vượt qua mọi bài kiểm tra, cho phép lưu đánh giá
+          
             var newReview = new Review
             {
                 UserId = userId,
